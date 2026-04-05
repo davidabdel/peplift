@@ -208,11 +208,11 @@ export default function App() {
                       e.stopPropagation();
                       setShowFullPlan(idx);
                     }}
-                    className="text-xs font-bold bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded-full text-zinc-600 uppercase tracking-widest transition-colors"
+                    className="text-xs font-bold bg-zinc-100 hover:bg-zinc-200 px-4 py-1.5 rounded-full text-zinc-600 uppercase tracking-widest transition-colors whitespace-nowrap"
                   >
-                    View Plan
+                    View/Edit Plan
                   </button>
-                  <span className="text-xs font-bold bg-zinc-100 px-3 py-1 rounded-full text-zinc-600 uppercase tracking-widest">
+                  <span className="text-xs font-bold bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-600 uppercase tracking-widest whitespace-nowrap">
                     {circuit.rounds} Rounds
                   </span>
                 </div>
@@ -288,17 +288,17 @@ export default function App() {
                               type="number" 
                               value={set.weight} 
                               onChange={(e) => updatePlanSet(showFullPlan!, exIdx, sIdx, 'weight', parseFloat(e.target.value) || 0)}
-                              className="w-12 bg-white border border-zinc-200 rounded px-1 font-bold text-zinc-900" 
+                              className="w-14 bg-white border border-zinc-200 rounded-md px-2 py-0.5 font-bold text-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all" 
                             />
-                            <span>kg</span>
-                            <span className="mx-1">×</span>
+                            <span className="opacity-60">kg</span>
+                            <span className="mx-1 opacity-20">×</span>
                             <input 
                               type="number" 
                               value={set.reps} 
                               onChange={(e) => updatePlanSet(showFullPlan!, exIdx, sIdx, 'reps', parseInt(e.target.value) || 0)}
-                              className="w-12 bg-white border border-zinc-200 rounded px-1 font-bold text-zinc-900" 
+                              className="w-14 bg-white border border-zinc-200 rounded-md px-2 py-0.5 font-bold text-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all" 
                             />
-                            <span>reps</span>
+                            <span className="opacity-60">reps</span>
                           </div>
                         ))}
                       </div>
@@ -433,25 +433,25 @@ export default function App() {
                         {sIdx + 1}
                       </div>
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        <div className="relative flex items-center">
+                        <div className="relative flex items-center bg-white/50 px-2 py-1 rounded-xl border border-transparent focus-within:border-zinc-200 transition-all">
                           <input
                             type="number"
                             step="0.5"
                             value={set.weight}
                             onChange={(e) => updateSet(currentExerciseIndex, sIdx, 'weight', parseFloat(e.target.value) || 0)}
-                            className="w-16 text-xl font-bold bg-transparent border-b-2 border-zinc-200 focus:border-zinc-900 outline-none text-center tabular-nums"
+                            className="w-14 text-xl font-bold bg-transparent outline-none text-center tabular-nums"
                           />
-                          <span className="text-zinc-400 ml-1 text-sm font-medium">kg</span>
+                          <span className="text-zinc-400 ml-0.5 text-xs font-bold uppercase tracking-tighter">kg</span>
                         </div>
-                        <span className="mx-3 text-zinc-200">/</span>
-                        <div className="relative flex items-center">
+                        <span className="mx-1 text-zinc-200">/</span>
+                        <div className="relative flex items-center bg-white/50 px-2 py-1 rounded-xl border border-transparent focus-within:border-zinc-200 transition-all">
                           <input
                             type="number"
                             value={set.reps}
                             onChange={(e) => updateSet(currentExerciseIndex, sIdx, 'reps', parseInt(e.target.value) || 0)}
-                            className="w-16 text-xl font-bold bg-transparent border-b-2 border-zinc-200 focus:border-zinc-900 outline-none text-center tabular-nums"
+                            className="w-14 text-xl font-bold bg-transparent outline-none text-center tabular-nums"
                           />
-                          <span className="text-zinc-400 ml-1 text-sm font-medium">reps</span>
+                          <span className="text-zinc-400 ml-0.5 text-xs font-bold uppercase tracking-tighter">reps</span>
                         </div>
                       </div>
                     </div>
