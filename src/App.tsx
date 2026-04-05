@@ -20,6 +20,10 @@ import {
 import { WORKOUT_DATA, Circuit, Exercise, Set } from './constants';
 
 export default function App() {
+  const [allCircuits, setAllCircuits] = useState<Circuit[]>(() => {
+    const saved = localStorage.getItem('peplift_workouts');
+    return saved ? JSON.parse(saved) : WORKOUT_DATA;
+  });
   const [activeCircuit, setActiveCircuit] = useState<Circuit | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentRound, setCurrentRound] = useState(1);
@@ -27,9 +31,14 @@ export default function App() {
   const [completedSets, setCompletedSets] = useState<Record<string, boolean>>({});
   const [restTime, setRestTime] = useState(0);
   const [isResting, setIsResting] = useState(false);
-  const [showFullPlan, setShowFullPlan] = useState<Circuit | null>(null);
+  const [showFullPlan, setShowFullPlan] = useState<number | null>(null); // Index of the circuit
   const [showExerciseList, setShowExerciseList] = useState(false);
   const [workoutComplete, setWorkoutComplete] = useState(false);
+
+  // Persistence
+  useEffect(() => {
+    localStorage.setItem('peplift_workouts', JSON.stringify(allCircuits));
+  }, [allCircuits]);
 
   // Timer logic
   useEffect(() => {
@@ -45,13 +54,51 @@ export default function App() {
   }, [isResting, restTime]);
 
   const startWorkout = (circuit: Circuit) => {
-    setActiveCircuit(circuit);
+    setActiveCircuit(JSON.parse(JSON.stringify(circuit)));
     setWorkoutStarted(true);
     setCurrentExerciseIndex(0);
     setCurrentRound(1);
     setCompletedSets({});
     setWorkoutComplete(false);
     setShowExerciseList(false);
+  };
+
+  const updateSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) => {
+    if (!activeCircuit) return;
+    
+    // Update active circuit
+    const newActive = { ...activeCircuit };
+    const newExercises = [...newActive.exercises];
+    const newSets = [...newExercises[exerciseIndex].sets];
+    newSets[setIndex] = { ...newSets[setIndex], [field]: value };
+    newExercises[exerciseIndex] = { ...newExercises[exerciseIndex], sets: newSets };
+    newActive.exercises = newExercises;
+    setActiveCircuit(newActive);
+
+    // Also update the source plan in allCircuits
+    setAllCircuits(prev => {
+      const index = prev.findIndex(c => c.name === activeCircuit.name);
+      if (index === -1) return prev;
+      const next = [...prev];
+      next[index] = JSON.parse(JSON.stringify(newActive)); // Sync current state back to plan
+      return next;
+    });
+  };
+
+  const updatePlanSet = (circuitIndex: number, exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) => {
+    setAllCircuits(prev => {
+      const next = [...prev];
+      const circuit = { ...next[circuitIndex] };
+      const exercises = [...circuit.exercises];
+      const exercise = { ...exercises[exerciseIndex] };
+      const sets = [...exercise.sets];
+      sets[setIndex] = { ...sets[setIndex], [field]: value };
+      exercise.sets = sets;
+      exercises[exerciseIndex] = exercise;
+      circuit.exercises = exercises;
+      next[circuitIndex] = circuit;
+      return next;
+    });
   };
 
   const toggleSet = (exerciseIndex: number, setIndex: number) => {
@@ -141,7 +188,7 @@ export default function App() {
         </header>
 
         <main className="max-w-4xl mx-auto grid gap-6 md:grid-cols-3">
-          {WORKOUT_DATA.map((circuit, idx) => (
+          {allCircuits.map((circuit, idx) => (
             <motion.div
               key={circuit.name}
               initial={{ y: 20, opacity: 0 }}
@@ -159,7 +206,7 @@ export default function App() {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowFullPlan(circuit);
+                      setShowFullPlan(idx);
                     }}
                     className="text-xs font-bold bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded-full text-zinc-600 uppercase tracking-widest transition-colors"
                   >
@@ -205,7 +252,7 @@ export default function App() {
 
         {/* Full Plan Modal */}
         <AnimatePresence>
-          {showFullPlan && (
+          {showFullPlan !== null && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -221,20 +268,39 @@ export default function App() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-zinc-900">{showFullPlan.name} Overview</h2>
+                  <h2 className="text-2xl font-bold text-zinc-900">{allCircuits[showFullPlan].name} Overview</h2>
                   <button onClick={() => setShowFullPlan(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
                     Close
                   </button>
                 </div>
-                <div className="p-6 overflow-y-auto space-y-4">
-                  {showFullPlan.exercises.map((ex, i) => (
-                    <div key={ex.name} className="flex items-center gap-4 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                      <span className="text-zinc-300 font-mono text-xs">{String(i + 1).padStart(2, '0')}</span>
-                      <div className="flex-grow">
+                <div className="p-6 overflow-y-auto space-y-6">
+                  {allCircuits[showFullPlan].exercises.map((ex, exIdx) => (
+                    <div key={ex.name} className="space-y-3">
+                      <div className="flex items-center gap-4">
+                        <span className="text-zinc-300 font-mono text-xs">{String(exIdx + 1).padStart(2, '0')}</span>
                         <h4 className="font-bold text-zinc-900">{ex.name}</h4>
-                        <p className="text-xs text-zinc-500">
-                          {ex.sets.length} sets • {ex.sets[0].weight}kg x {ex.sets[0].reps} reps
-                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 ml-8">
+                        {ex.sets.map((set, sIdx) => (
+                          <div key={sIdx} className="flex items-center gap-2 bg-zinc-50 p-2 rounded-lg border border-zinc-100 text-xs text-zinc-600">
+                            <span className="w-4">S{sIdx + 1}</span>
+                            <input 
+                              type="number" 
+                              value={set.weight} 
+                              onChange={(e) => updatePlanSet(showFullPlan!, exIdx, sIdx, 'weight', parseFloat(e.target.value) || 0)}
+                              className="w-12 bg-white border border-zinc-200 rounded px-1 font-bold text-zinc-900" 
+                            />
+                            <span>kg</span>
+                            <span className="mx-1">×</span>
+                            <input 
+                              type="number" 
+                              value={set.reps} 
+                              onChange={(e) => updatePlanSet(showFullPlan!, exIdx, sIdx, 'reps', parseInt(e.target.value) || 0)}
+                              className="w-12 bg-white border border-zinc-200 rounded px-1 font-bold text-zinc-900" 
+                            />
+                            <span>reps</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -242,7 +308,7 @@ export default function App() {
                 <div className="p-6 border-t border-zinc-100">
                   <button 
                     onClick={() => {
-                      startWorkout(showFullPlan);
+                      startWorkout(allCircuits[showFullPlan!]);
                       setShowFullPlan(null);
                     }}
                     className="w-full bg-zinc-900 text-white font-bold py-3 rounded-xl hover:bg-zinc-800 transition-colors"
@@ -366,12 +432,27 @@ export default function App() {
                       }`}>
                         {sIdx + 1}
                       </div>
-                      <div>
-                        <span className="text-xl font-bold">{set.weight}</span>
-                        <span className="text-zinc-400 ml-1 text-sm font-medium">kg</span>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative flex items-center">
+                          <input
+                            type="number"
+                            step="0.5"
+                            value={set.weight}
+                            onChange={(e) => updateSet(currentExerciseIndex, sIdx, 'weight', parseFloat(e.target.value) || 0)}
+                            className="w-16 text-xl font-bold bg-transparent border-b-2 border-zinc-200 focus:border-zinc-900 outline-none text-center tabular-nums"
+                          />
+                          <span className="text-zinc-400 ml-1 text-sm font-medium">kg</span>
+                        </div>
                         <span className="mx-3 text-zinc-200">/</span>
-                        <span className="text-xl font-bold">{set.reps}</span>
-                        <span className="text-zinc-400 ml-1 text-sm font-medium">reps</span>
+                        <div className="relative flex items-center">
+                          <input
+                            type="number"
+                            value={set.reps}
+                            onChange={(e) => updateSet(currentExerciseIndex, sIdx, 'reps', parseInt(e.target.value) || 0)}
+                            className="w-16 text-xl font-bold bg-transparent border-b-2 border-zinc-200 focus:border-zinc-900 outline-none text-center tabular-nums"
+                          />
+                          <span className="text-zinc-400 ml-1 text-sm font-medium">reps</span>
+                        </div>
                       </div>
                     </div>
                     {isCompleted && <CheckCircle2 className="text-emerald-500" size={24} />}
