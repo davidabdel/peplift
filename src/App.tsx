@@ -187,7 +187,19 @@ export default function App() {
           </motion.div>
         </header>
 
-        <main className="max-w-4xl mx-auto grid gap-6 md:grid-cols-3">
+        <main className="max-w-6xl mx-auto relative px-6 md:px-12">
+          {/* Subtle Full Screen Background Image */}
+          <div 
+            className="fixed inset-0 pointer-events-none opacity-[0.35] z-0 transition-opacity duration-1000"
+            style={{ 
+              backgroundImage: "url('/hero-models.jpg')",
+              backgroundPosition: 'center 20%',
+              backgroundSize: 'cover',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+
+          <div className="grid gap-8 md:grid-cols-3 relative z-10 py-12">
           {allCircuits.map((circuit, idx) => (
             <motion.div
               key={circuit.name}
@@ -244,6 +256,7 @@ export default function App() {
               </button>
             </motion.div>
           ))}
+          </div>
         </main>
 
         <footer className="max-w-4xl mx-auto mt-20 text-center text-zinc-400 text-sm">
