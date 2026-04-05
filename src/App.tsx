@@ -34,11 +34,34 @@ export default function App() {
   const [showFullPlan, setShowFullPlan] = useState<number | null>(null); // Index of the circuit
   const [showExerciseList, setShowExerciseList] = useState(false);
   const [workoutComplete, setWorkoutComplete] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   // Persistence
   useEffect(() => {
     localStorage.setItem('peplift_workouts', JSON.stringify(allCircuits));
   }, [allCircuits]);
+
+  // PWA Install Prompt
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   // Timer logic
   useEffect(() => {
@@ -185,6 +208,36 @@ export default function App() {
             <h1 className="text-5xl font-black tracking-tighter mb-2 italic text-zinc-900">PEPLIFT</h1>
             <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">Full Body Circuit Training</p>
           </motion.div>
+
+          <AnimatePresence>
+            {showInstallBanner && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mt-8 bg-zinc-900 text-white p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative"
+              >
+                <div className="relative z-10">
+                  <h3 className="text-xl font-bold mb-1">Install PepLift</h3>
+                  <p className="text-zinc-400 text-sm">Add PepLift to your home screen for quick access and offline training.</p>
+                </div>
+                <div className="flex gap-3 relative z-10 shrink-0">
+                  <button 
+                    onClick={() => setShowInstallBanner(false)}
+                    className="px-6 py-3 rounded-xl font-bold bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Not now
+                  </button>
+                  <button 
+                    onClick={handleInstall}
+                    className="px-8 py-3 rounded-xl font-bold bg-white text-zinc-900 hover:bg-zinc-100 transition-colors flex items-center gap-2"
+                  >
+                    Install App
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </header>
 
         <main className="max-w-6xl mx-auto relative px-6 md:px-12">
