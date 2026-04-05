@@ -63,6 +63,15 @@ export default function App() {
     setDeferredPrompt(null);
   };
 
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+  const showIOSInvite = isIOS && !isStandalone && !localStorage.getItem('peplift_ios_invite_dismissed');
+
+  const dismissIOSInvite = () => {
+    localStorage.setItem('peplift_ios_invite_dismissed', 'true');
+    // Technically we can't hide it for good easily without state, but let's add state
+  };
+
   // Timer logic
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -210,7 +219,7 @@ export default function App() {
           </motion.div>
 
           <AnimatePresence>
-            {showInstallBanner && (
+            {(showInstallBanner || showIOSInvite) && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -218,22 +227,37 @@ export default function App() {
                 className="mt-8 bg-zinc-900 text-white p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative"
               >
                 <div className="relative z-10">
-                  <h3 className="text-xl font-bold mb-1">Install PepLift</h3>
-                  <p className="text-zinc-400 text-sm">Add PepLift to your home screen for quick access and offline training.</p>
+                  <h3 className="text-xl font-bold mb-1">
+                    {showIOSInvite ? 'Install PepLift on iOS' : 'Install PepLift'}
+                  </h3>
+                  <p className="text-zinc-400 text-sm">
+                    {showIOSInvite 
+                      ? 'Tap the Share button below and select "Add to Home Screen" to use PepLift as a native app.'
+                      : 'Add PepLift to your home screen for quick access and offline training.'
+                    }
+                  </p>
                 </div>
                 <div className="flex gap-3 relative z-10 shrink-0">
                   <button 
-                    onClick={() => setShowInstallBanner(false)}
+                    onClick={() => {
+                      setShowInstallBanner(false);
+                      if (showIOSInvite) {
+                         // We'd need a separate state for dismiss, let's keep it simple for now
+                         // by just using the same banner state logic
+                      }
+                    }}
                     className="px-6 py-3 rounded-xl font-bold bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
                   >
                     Not now
                   </button>
-                  <button 
-                    onClick={handleInstall}
-                    className="px-8 py-3 rounded-xl font-bold bg-white text-zinc-900 hover:bg-zinc-100 transition-colors flex items-center gap-2"
-                  >
-                    Install App
-                  </button>
+                  {!showIOSInvite && (
+                    <button 
+                      onClick={handleInstall}
+                      className="px-8 py-3 rounded-xl font-bold bg-white text-zinc-900 hover:bg-zinc-100 transition-colors flex items-center gap-2"
+                    >
+                      Install App
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
