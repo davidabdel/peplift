@@ -198,24 +198,24 @@ export default function App() {
               className="group bg-white border border-zinc-200 p-6 rounded-3xl hover:border-zinc-300 hover:shadow-lg transition-all cursor-pointer flex flex-col h-full"
               onClick={() => startWorkout(circuit)}
             >
-              <div className="flex justify-between items-start mb-6">
-                <div className="bg-zinc-100 p-3 rounded-2xl group-hover:bg-zinc-200 transition-colors">
-                  <Dumbbell className="text-zinc-900" size={24} />
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowFullPlan(idx);
-                    }}
-                    className="text-xs font-bold bg-zinc-100 hover:bg-zinc-200 px-4 py-1.5 rounded-full text-zinc-600 uppercase tracking-widest transition-colors whitespace-nowrap"
-                  >
-                    View/Edit Plan
-                  </button>
-                  <span className="text-xs font-bold bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-600 uppercase tracking-widest whitespace-nowrap">
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <div className="bg-zinc-100 p-3 rounded-2xl group-hover:bg-zinc-200 transition-colors">
+                    <Dumbbell className="text-zinc-900" size={24} />
+                  </div>
+                  <span className="text-[10px] font-black bg-zinc-900 text-white px-3 py-1 rounded-full uppercase tracking-widest">
                     {circuit.rounds} Rounds
                   </span>
                 </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowFullPlan(idx);
+                  }}
+                  className="text-xs font-bold bg-zinc-100 hover:bg-zinc-200 px-4 py-2 rounded-xl text-zinc-600 uppercase tracking-widest transition-colors whitespace-nowrap text-center border border-zinc-200/50"
+                >
+                  View/Edit Plan
+                </button>
               </div>
               
               <h2 className="text-2xl font-bold mb-2 text-zinc-900">{circuit.name}</h2>
